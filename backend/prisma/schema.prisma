@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model finances {
+  id            Int       @id @default(autoincrement())
+  description   String    @db.VarChar(60)
+  reference     String    @db.VarChar(6)
+  value         Float     @db.Float
+  status        String    @default("pending") @db.VarChar(30)
+  housingId     Int
+  timestamp_col DateTime? @default(now()) @db.Timestamp(0)
+  housings      housings  @relation(fields: [housingId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_37388008b9ad377a2d523a034f0")
+
+  @@index([housingId], map: "housingId")
+}
+
+model housings {
+  id              Int        @id @default(autoincrement())
+  owner_full_name String     @db.VarChar(100)
+  owner_cpf       String     @unique(map: "owner_cpf") @db.VarChar(11)
+  owner_birthday  DateTime?  @db.Date
+  authId          Int
+  locationId      Int?
+  timestamp_col   DateTime?  @default(now()) @db.Timestamp(0)
+  finances        finances[]
+  locations       locations? @relation(fields: [locationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "housings_ibfk_1")
+  auth            auth       @relation(fields: [authId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "housings_ibfk_2")
+  peoples         peoples[]
+  requests        requests[]
+
+  @@index([authId], map: "authId")
+  @@index([locationId], map: "locationId")
+}
+
+model locations {
+  id            Int        @id @default(autoincrement())
+  location_name String     @unique(map: "location_name") @db.VarChar(100)
+  status        String?    @default("void") @db.VarChar(40)
+  timestamp_col DateTime?  @default(now()) @db.Timestamp(0)
+  housings      housings[]
+}
+
+model peoples {
+  id            Int       @id @default(autoincrement())
+  full_name     String    @db.VarChar(100)
+  cpf           String    @unique(map: "cpf") @db.VarChar(11)
+  type          String    @default("resident") @db.VarChar(30)
+  pathDocument  String?   @db.VarChar(255)
+  housingId     Int
+  timestamp_col DateTime? @default(now()) @db.Timestamp(0)
+  housings      housings  @relation(fields: [housingId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_c1d0c496095852a66e2db493460")
+
+  @@index([housingId], map: "housingId")
+}
+
+model requests {
+  id            Int       @id @default(autoincrement())
+  title         String    @db.VarChar(100)
+  description   String    @db.Text
+  status        String    @default("pending") @db.VarChar(30)
+  housingId     Int
+  timestamp_col DateTime? @default(now()) @db.Timestamp(0)
+  housings      housings  @relation(fields: [housingId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "requests_ibfk_1")
+
+  @@index([housingId], map: "housingId")
+}
+
+model auth {
+  id            Int        @id @default(autoincrement())
+  name          String     @db.VarChar(70)
+  login         String     @unique(map: "login") @db.VarChar(100)
+  password      String     @db.VarChar(255)
+  permission    String     @default("user") @db.VarChar(50)
+  timestamp_col DateTime?  @default(now()) @db.Timestamp(0)
+  housings      housings[]
+  notices       notices[]
+}
+
+model notices {
+  id            Int       @id @default(autoincrement())
+  title         String    @db.VarChar(100)
+  body          String?   @db.Text
+  author        Int
+  timestamp_col DateTime? @default(now()) @db.Timestamp(0)
+  auth          auth      @relation(fields: [author], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "notices_ibfk_1")
+
+  @@index([author], map: "author")
+}
