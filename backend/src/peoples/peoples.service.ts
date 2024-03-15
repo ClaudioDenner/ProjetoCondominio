@@ -13,21 +13,21 @@ export class PeoplesService {
   constructor(private prisma:PrismaService){}
 
   async create(createPeopleDto: CreatePeopleDto, file:Express.Multer.File, housingId:number) {
-    
+    console.log(file)
     const {full_name, cpf, type} = createPeopleDto
     const getId = await this.prisma.peoples.findFirst({orderBy:{id:'desc'}})
     const id = getId === null ? 1 : getId.id + 1
 
     const pathBucket = join('storage',`housingId${housingId}`,`peopleId${id}`)
     const pathDocument = join(__dirname,'../','../',pathBucket )
-    const fileName = file.originalname
+    const fileName = file?.originalname
 
     if(!existsSync(pathDocument)){
-      mkdirSync(pathDocument)
+      mkdirSync(pathDocument,{recursive:true})
     }
-
+    console.log(pathDocument)
     await writeFile(join(pathDocument,fileName),file.buffer)
-
+//
     try{
       const query = await this.prisma.peoples.create({
         data:{

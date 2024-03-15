@@ -1,4 +1,4 @@
-CREATE DATABASE Condominio;
+#CREATE DATABASE Condominio;
 
 use Condominio;
 
